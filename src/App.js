@@ -6,9 +6,16 @@ import { faExclamation } from '@fortawesome/free-solid-svg-icons'
 import 'bulma';
 import './App.css';
 import axios from 'axios';
-import {useSpring, animated, interpolate} from 'react-spring';
+import {useSpring, animated} from 'react-spring';
 import intelIcon from './intel-xxl.png';
 
+/*
+                    transform: errStyle.x
+
+                      .interpolate(
+                        x => `translateX(${x})`
+                      )
+*/
 function App() {
 
     //Data value in textarea
@@ -52,8 +59,9 @@ function App() {
   const [state1, toggle1] = useState(false);
   const [state2, toggle2] = useState(false);
   const searchStyle = useSpring({ height: 500, fontSize: 40, overflow: 'auto', padding: state2 ? 40:30});
-  const errStyle = useSpring({x: errors ? 1 : 0})
-  const wwidStyle = useSpring({padding: state1 ? 50:30});
+  const {x} = useSpring({
+    from: {x: 0}, x: errors.WWID && state1  ? 1: 0, config: {duration: 500} 
+  })
   const navStyle = { backgroundColor: '#0071C5' }
 
   return (
@@ -65,7 +73,7 @@ function App() {
         <div className="navbar-start">
           <div className="navbar-item">
             <div>
-              <span style={{ color: 'white', fontSize: 30,}}>Lab Librarian</span><br/>
+              <span style={{ color: 'white', fontSize: 30}}>Lab Librarian</span><br/>
               <span style={{ color: 'white', fontSize: 15}}>Inventory Tool</span>
             </div>
           </div>
@@ -92,32 +100,30 @@ function App() {
                 This is the WWID input box, it has a lot of junk in it but most of that is just for fancy animations 
                 */}
                 <animated.input
-                  className={"input is-large effect-8 " + (!errors.WWID ? "is-primary" : "is-danger")}
+                  className={"input is-large " + (!errors.WWID ? "is-primary" : "is-danger")}
                   placeholder="Scan WWID"
                   name="WWID"
                   //fancy animation junk, check out https://www.react-spring.io to learn about how this works
                   style={{
-                    transform: errStyle.x
+                    transform: x
                       .interpolate({
-                        range: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
-                        output: [0, 100, -100, 100, -100, 100, -100, 100, -100, 0]
+                        range: [0, 0.2, 0.4, 0.6, 0.8, 1],
+                        output: [0, 10, -10, 10, -10, 0]
                       })
-                      .interpolate(
-                        x => `translateX(${x})`
-                      )
+                      .interpolate(x => `translateX(${x}px)`)
                   }}
                   //This is where WWID Validation happens!
+                  //Right now it's just validating that the input is 8 chars long
                   ref={register({
                     required: true,
                     validate: (value) => value.length === 8
                   })}
                   onChange={handleChange}
-                  onFocus={() => toggle1(true)}
                   onBlur={() => {
-                    toggle1(false)
-                    console.log(errors)
+                    toggle1(!state1)
                   }}
                   autoComplete = "off"
+                  
                 />
                 <span className="focus-border">
                   <i></i>
@@ -158,7 +164,7 @@ function App() {
             </div>
             <div>
               <input type="submit" className="button is-link" value="Check-out" disabled={errors.WWID || !formState.dirty} style={{margin: 5}}/>
-              <input type="reset" onClick={reset} className="button is-danger" value="Reset" disabled={errors.WWID || !formState.dirty} style={{margin: 5}}/>
+              <input type="reset" onClick={reset} className="button is-danger" value="Reset" style={{margin: 5}}/>
             </div>
           </form>
           <h1>{textAreaVal}</h1>
